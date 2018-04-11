@@ -31,6 +31,8 @@ class FileClass:
         comm = CommentClass()
         pic.src = "/qwe/qwe.png"
         pic.add_comment(comm.example_data())
+        pic.is_foto = True
+        pic.date = "01.01.2018"
         pic.caption = "Here ist somthg"
         return pic
     

@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+import pandas as pd #pip install pandas
+
 from fileclass import FileClass
+from os.path import expanduser
+    
 
 class dbManager:
     
     def __init__(self):
-        self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/peekaboo.db')
+        
+        ### Wo bin ich hier?
+        home = expanduser("~")
+        if home == r'C:\Users\michaelk':
+            self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo.db')
+        else:
+            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/peekaboo.db')
 
     def close(self):
         self.db.close()
@@ -53,13 +63,18 @@ class dbManager:
              fotoValue, 
              videoValue,
              fileObject.caption))
+#         cursor.execute('''
+#             INSERT INTO Comment(UserName, Date, Like, Text, FileId)
+#             VALUES(?,?,?,?,?)''', 
+#             (fileObject.src, 
+#              fileObject.date, 
+#              fotoValue, 
+#              videoValue,
+#              fileObject.caption))
         self.db.commit()
         
     def select(self):
-        cursor = self.db.cursor()
-        cursor.execute('''SELECT * FROM File''')
-        for row in cursor:
-            print(row)
+        print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
             
     def drop_table(self, name):
@@ -77,9 +92,9 @@ if __name__ == "__main__":
     
     dbm = dbManager()
     dbm.show_tables()
-    
+
     pic = FileClass()
     print(pic.example_data())
-    
-#    dbm.add_file(pic)
+     
+    dbm.add_file(pic.example_data())
     dbm.select()
