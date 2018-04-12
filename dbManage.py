@@ -4,7 +4,6 @@ import sqlite3
 import pandas as pd #pip install pandas
 import hashlib
 
-from fileclass import FileClass
 from os.path import expanduser
     
 
@@ -19,6 +18,7 @@ class dbManager:
         else:
             self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/peekaboo.db')
 
+        self.db.execute("PRAGMA foreign_keys = ON")
         ### Helfer
 
         
@@ -46,10 +46,10 @@ class dbManager:
               CommentId     INTEGER PRIMARY KEY,
               UserName      TEXT NOT NULL,
               Date          DATETIME,
-              Like          INTEGER,
-              Text          TEXT,              
+              Like          INT,
+              Text          TEXT,
               FileId        INTEGER NOT NULL,
-              FOREIGN KEY(FileId) REFERENCES File(FileId)
+              FOREIGN KEY(FileId) REFERENCES File(FileId) ON DELETE CASCADE
             );
         ''')
             
@@ -100,7 +100,11 @@ class dbManager:
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
         print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
-            
+    def delete(self):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM File WHERE FileId<>'42'")
+        self.db.commit()
+        
     def drop_table(self, name):
         cursor = self.db.cursor()
         cursor.execute("DROP TABLE "+name)
@@ -120,8 +124,15 @@ class dbManager:
 
 if __name__ == "__main__":
     
+    from fileclass import FileClass
+    
     man = dbManager()
-    man.add_file(FileClass().example_data())
+#     man.create_table_file()
+#     man.create_table_comment()
+#     man.add_file(FileClass().example_data())
+
+#     man.reset()
+    
     man.select()
 
     

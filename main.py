@@ -9,8 +9,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from imageClass import imageClass, commentClass
-from albumClass import albumClass
+from fileclass import FileClass, FileType
+from commentclass import CommentClass
+from albumclass import AlbumClass
 
 import time
 
@@ -91,36 +92,36 @@ class scrapPeekaboo:
             
             print(str(loop_nr) + " von " + str(len(albumListe)))
             
-            alb = albumClass()
-            alb.date = self.driver.find_element_by_class_name("detail-date").text
-            alb.caption = self.driver.find_element_by_class_name("describe-content").text
+            album = AlbumClass()
+            album.date = self.driver.find_element_by_class_name("detail-date").text
+            album.caption = self.driver.find_element_by_class_name("describe-content").text
                 
             for bild in bildListe:
                 
-                ima = imageClass()
+                file = FileClass()
                 bild.click()
                 
                 ### warten und jetzt endlich die daten holen
                 WebDriverWait(self.driver, self.TIME_OUT).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='comments-info-content' or @class='comments-null']")))
                     
                 link = self.driver.find_element_by_xpath("//*[@class='view-wrap-pic' or @class='view-wrap-video']")
-                ima.src = link.get_attribute("src")
+                file.src = link.get_attribute("src")
                 
                 comments = self.driver.find_elements_by_class_name("comments-info-content")
                 for com in comments:
-                    co = commentClass()
-                    co.text = com.find_element_by_tag_name("mark").text
-                    co.date = com.find_element_by_tag_name("i").text
-                    co.who = com.find_element_by_tag_name("span").text                    
-                    co.is_like = (co.text == "Liked this photo")
-                    ima.add_comment([co])
+                    tmpCom = CommentClass()
+                    tmpCom.text = com.find_element_by_tag_name("mark").text
+                    tmpCom.date = com.find_element_by_tag_name("i").text
+                    tmpCom.who = com.find_element_by_tag_name("span").text                    
+                    tmpCom.is_like = (tmpCom.text == "Liked this photo")
+                    file.add_comment([tmpCom])
                     
-                alb.add_image([ima])    
+                album.add_image([file])    
                 self.driver.execute_script('{$(".view").hide(), $(".view-wrap-describe").empty(), $(".view-wrap-box").remove(), $(".view-wrap-loading").show(), $(".view-wrap-load").hide();var e = $(".view-content").find("video");0 != e.length && e.each(function() {$(this).get(0).pause()}), T = 0, w = {}}')
                 
             
 #            self.driver.switch_to.default_content()
-            alb.show_all()
+            album.show_all()
             break;
                 
 
@@ -139,6 +140,18 @@ class scrapPeekaboo:
     
         ### beende selenium        
         self.driver.close()
+        
+        '''
+        TODO
+        
+        filetype (foto oder video) herausfinden und bestücken
+        berechtigung bestücken
+        album in datenbank modellieren
+        
+        '''
+        
+        
+        
 
 
 if __name__ == "__main__":    
