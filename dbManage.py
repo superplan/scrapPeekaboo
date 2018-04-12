@@ -5,9 +5,7 @@ import pandas as pd #pip install pandas
 import hashlib
 
 from fileclass import FileClass
-from commentclass import CommentClass
 from os.path import expanduser
-from imageClass import commentClass
     
 
 class dbManager:
@@ -34,9 +32,9 @@ class dbManager:
               FileId        INT PRIMARY KEY NOT NULL,
               SrcOnline     TEXT NOT NULL,
               SrcLocal      TEXT,
+              Access        INT,
               Date          DATETIME,
-              Foto          INTEGER NOT NULL,
-              Video         INTEGER NOT NULL,
+              Type          INT,
               Caption       TEXT
             );
         ''')
@@ -55,30 +53,28 @@ class dbManager:
             );
         ''')
             
-    def gen_id(self, str):   
-        val = hashlib.sha1(str.encode('utf8'))          
+    def gen_id(self, long_string):   
+        val = hashlib.sha1(long_string.encode('utf8'))          
         return int(val.hexdigest()[:10],base=16)     
             
     def add_file(self, fileObject):
-        (fotoValue, videoValue) = (0,1)
-        if (fileObject.is_foto):
-            (fotoValue, videoValue) = (1,0)
         
-        id = self.gen_id(fileObject.src)
+        unique_id = self.gen_id(fileObject.src)
         cursor = self.db.cursor()
+        
         try:            
             cursor.execute('''
-            INSERT INTO File(FileId, SrcOnline, Date, Foto, Video, Caption)
+            INSERT INTO File(FileId, SrcOnline, Access, Date, Type, Caption)
             VALUES(?,?,?,?,?,?)''', 
-            (id,
+            (unique_id,
              fileObject.src,
+             fileObject.access.value,
              fileObject.date, 
-             fotoValue, 
-             videoValue,
+             fileObject.type.value,
              fileObject.caption))
             
             for comment in fileObject.comment_list:
-                self.add_comment(comment, id)
+                self.add_comment(comment, unique_id)
             
         except sqlite3.IntegrityError as e:
             print("WARNUNG: Die Datenbank kennt dieses Foto/Video bereits: " + str(self.gen_id(fileObject.src)))

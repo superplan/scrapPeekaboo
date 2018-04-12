@@ -1,23 +1,32 @@
 from commentclass import CommentClass
+from enum import Enum 
+
+class Access(Enum):
+    all = 1
+    family = 2
+    parents = 3
+    personal = 4
+    
+class FileType(Enum):
+    foto = 1
+    video = 2
 
 class FileClass:
     
     def __init__(self):
-        self.src = ""
+        self.src = None
+        self.access = Access.all
+        self.type = FileType.foto
+        self.date = None
         self.comment_list = []
-        self.is_foto = True
-        self.date = ""
-        self.caption = ""
+        self.caption = None
         
     def __str__(self):
-        out =  "------- Image ------- \n"
-        out += "  Format: " 
-        if (self.is_foto):
-            out += "photo\n"
-        else:
-            out += "video\n"
-        out += " Caption: " + self.caption + "\n"
+        out =  "------- File ------- \n"
+        out += "    Type: " + self.type.name + "\n"
+        out += "  Access: " + self.access.name + "\n"
         out += "    Date: " + self.date + "\n"
+        out += " Caption: " + self.caption + "\n"
         out += "Comments: \n"
         for com in self.comment_list:
             out += "   " + str(com) + "\n"
