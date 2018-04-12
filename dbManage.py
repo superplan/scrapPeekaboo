@@ -5,7 +5,9 @@ import pandas as pd #pip install pandas
 import hashlib
 
 from fileclass import FileClass
+from commentclass import CommentClass
 from os.path import expanduser
+from imageClass import commentClass
     
 
 class dbManager:
@@ -62,34 +64,45 @@ class dbManager:
         if (fileObject.is_foto):
             (fotoValue, videoValue) = (1,0)
         
+        id = self.gen_id(fileObject.src)
         cursor = self.db.cursor()
         try:            
             cursor.execute('''
             INSERT INTO File(FileId, SrcOnline, Date, Foto, Video, Caption)
             VALUES(?,?,?,?,?,?)''', 
-            (self.gen_id(fileObject.src),
+            (id,
              fileObject.src,
              fileObject.date, 
              fotoValue, 
              videoValue,
              fileObject.caption))
-#         cursor.execute('''
-#             INSERT INTO Comment(UserName, Date, Like, Text, FileId)
-#             VALUES(?,?,?,?,?)''', 
-#             (fileObject.src, 
-#              fileObject.date, 
-#              fotoValue, 
-#              videoValue,
-#              fileObject.caption))
-
+            
+            for comment in fileObject.comment_list:
+                self.add_comment(comment, id)
+            
         except sqlite3.IntegrityError as e:
             print("WARNUNG: Die Datenbank kennt dieses Foto/Video bereits: " + str(self.gen_id(fileObject.src)))
             print(e)
         finally:
             self.db.commit()
+                    
+    def add_comment(self, comm, file_id, commit = False):
+        cursor = self.db.cursor()
+        cursor.execute('''
+            INSERT INTO Comment(UserName, Date, Like, Text, FileId)
+            VALUES(?,?,?,?,?)''', 
+            (comm.who, 
+             comm.date, 
+             comm.is_like, 
+             comm.text,
+             file_id))
         
+        if(commit):
+            self.db.commit()
+
     def select(self):
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
+        print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
             
     def drop_table(self, name):
@@ -112,8 +125,6 @@ class dbManager:
 if __name__ == "__main__":
     
     man = dbManager()
-#     man.show_tables()
-#     print(FileClass().example_data())
     man.add_file(FileClass().example_data())
     man.select()
 
