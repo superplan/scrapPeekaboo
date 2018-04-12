@@ -29,7 +29,7 @@ class FileClass:
     def example_data(self):
         pic = FileClass()
         comm = CommentClass()
-        pic.src = "/qwe/qwe.png"
+        pic.src = "http://qwe/qwe.png"
         pic.add_comment(comm.example_data())
         pic.is_foto = True
         pic.date = "01.01.2018"
