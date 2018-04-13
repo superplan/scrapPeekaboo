@@ -157,7 +157,14 @@ class scrapPeekaboo:
         
         '''
         
-        
+    def play(self):
+        self.login()
+        time.sleep(4)
+        self.scroll(pauseTime = 1, limit = -1)
+        ####################  HIER kann man was ausprobieren
+#         self.driver
+        ####################
+        self.driver.close()
         
 
 
