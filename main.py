@@ -14,6 +14,7 @@ from commentclass import CommentClass
 from albumclass import AlbumClass
 
 import time
+import utils
 
 class scrapPeekaboo:
     
@@ -69,7 +70,7 @@ class scrapPeekaboo:
         loop_nr = 0
         for albumListeElement in albumListe:
             
-            if loop_nr > limit:
+            if loop_nr >= limit:
                 break;
                 
             loop_nr +=1
@@ -83,8 +84,6 @@ class scrapPeekaboo:
             
             window_after = self.driver.window_handles[1]
             self.driver.switch_to_window(window_after)
-            # back to man window
-            #driver.switch_to.default_content()
             
             WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "pic")))
             bildListe = self.driver.find_elements_by_class_name("pic")
@@ -93,8 +92,13 @@ class scrapPeekaboo:
             print(str(loop_nr) + " von " + str(len(albumListe)))
             
             album = AlbumClass()
-            album.date = self.driver.find_element_by_class_name("detail-date").text
-            album.caption = self.driver.find_element_by_class_name("describe-content").text
+            
+            tmp_date = self.driver.find_element_by_class_name("detail-date").text
+            album.date = utils.format_date(tmp_date)
+            
+            tmp_caption = self.driver.find_element_by_class_name("describe-content").text
+            if tmp_caption != "Write down the story of this day...":                                
+                album.caption = tmp_caption
                 
             for bild in bildListe:
                 
@@ -106,6 +110,7 @@ class scrapPeekaboo:
                     
                 link = self.driver.find_element_by_xpath("//*[@class='view-wrap-pic' or @class='view-wrap-video']")
                 file.src = link.get_attribute("src")
+                file.date = album.date
                 
                 comments = self.driver.find_elements_by_class_name("comments-info-content")
                 for com in comments:
@@ -119,10 +124,12 @@ class scrapPeekaboo:
                 album.add_image([file])    
                 self.driver.execute_script('{$(".view").hide(), $(".view-wrap-describe").empty(), $(".view-wrap-box").remove(), $(".view-wrap-loading").show(), $(".view-wrap-load").hide();var e = $(".view-content").find("video");0 != e.length && e.each(function() {$(this).get(0).pause()}), T = 0, w = {}}')
                 
+
+            # back to man window
+            self.driver.switch_to_window(window_before)
             
-#            self.driver.switch_to.default_content()
             album.show_all()
-            break;
+#             break;
                 
 
     def run(self):
@@ -157,6 +164,8 @@ class scrapPeekaboo:
 if __name__ == "__main__":    
     bla = scrapPeekaboo()
     bla.run()
+
+    
 
 ### Hiermit wird direkt nach unten gescrollt
 

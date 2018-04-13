@@ -19,7 +19,7 @@ class FileClass:
         self.type = FileType.foto
         self.date = None
         self.comment_list = []
-        self.caption = None
+        self.caption = ""
         
     def __str__(self):
         out =  "------- File ------- \n"

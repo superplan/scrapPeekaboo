@@ -1,3 +1,5 @@
+from fileclass import FileClass, FileType
+
 class AlbumClass:
     
     
@@ -32,16 +34,14 @@ class AlbumClass:
         foto = 0
         vids = 0
         for image in self.image_list:
-            if(image.is_foto):
+            if(image.type == FileType.foto):
                 foto += 1
-            else:
+            if(image.type == FileType.video):
                 vids += 1
         return "(" + str(foto) + ", " + str(vids) + ")"
         
 if __name__ == "__main__":
-    
-    from fileclass import FileClass, FileType
-    
+        
     pic = FileClass().example_data()
     vid = FileClass().example_data()
     vid.src += ".mp4"
