@@ -9,10 +9,10 @@ class CommentClass:
     def __str__(self):
         out = self.date + "\t" + self.who + ": " 
         if (self.is_like):
-            out += " like\n"
+            out += " like"
         else:
             out += self.text
-        return out 
+        return out + "\n"
     
     def example_data(self):
         com1 = CommentClass()

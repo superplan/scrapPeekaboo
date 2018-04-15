@@ -1,11 +1,21 @@
 from commentclass import CommentClass
-from enum import Enum 
+from enum import Enum
 
 class Access(Enum):
-    all = 1
-    family = 2
-    parents = 3
-    personal = 4
+    all = 1 # Family Members and Fans
+    family = 2 # Family Members
+    parents = 3 # Parents
+    me = 4 # Only Me
+
+    @staticmethod
+    def set(arg):
+        mapping = {
+            "Family Members and Fans" : Access.all,
+            "Family Members" : Access.family,
+            "Parents" : Access.parents,
+            "Only Me" : Access.me
+        }
+        return mapping[arg]
     
 class FileType(Enum):
     foto = 1
@@ -23,6 +33,7 @@ class FileClass:
         
     def __str__(self):
         out =  "------- File ------- \n"
+        out += "  Source: " + self.src + "\n"
         out += "    Type: " + self.type.name + "\n"
         out += "  Access: " + self.access.name + "\n"
         out += "    Date: " + self.date + "\n"
@@ -31,7 +42,17 @@ class FileClass:
         for com in self.comment_list:
             out += "   " + str(com) + "\n"
         return out  
-    
+
+    # def set_access(self, arg):
+    #
+    #     mapping = {
+    #         "Family Members and Fans" : Access.all,
+    #         "Family Members" : Access.family,
+    #         "Parents" : Access.parents,
+    #         "Only Me" : Access.me
+    #     }
+    #     return mapping[arg]
+
     def add_comment(self, comm):
         self.comment_list.extend(comm)
         
@@ -43,6 +64,7 @@ class FileClass:
         pic.is_foto = True
         pic.date = "01.01.2018"
         pic.caption = "Here ist somthg"
+        pic.access = Access.set("Family Members and Fans")
         return pic
     
 if __name__ == "__main__":

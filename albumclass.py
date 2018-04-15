@@ -6,14 +6,14 @@ class AlbumClass:
     def __init__(self, caption = "", date = ""):
         self.image_list = []  
         self.caption = caption
-        self.date = date  
-        
-        self.format_date() 
+        self.date = date
+        self.src = ""
         
     def __str__(self):
         out =  "---------- Album ---------- \n"
         out += "           Datum: " + self.date + "\n"
         out += "         Caption: " + self.caption + "\n"
+        out += "          Source: " + self.src + "\n"
         
 
         out += "Total (pic, vid): " + str(len(self.image_list)) + " " +self.get_number_foto()
@@ -26,9 +26,6 @@ class AlbumClass:
     
     def add_image(self, im):
         self.image_list.extend(im)
-        
-    def format_date(self):
-        self.date = self.date + "formated"
         
     def get_number_foto(self):
         foto = 0
@@ -51,6 +48,6 @@ if __name__ == "__main__":
     bla = AlbumClass()
     bla.add_image([pic])
     bla.add_image([vid])
-    bla.show_all()
-    
+    # bla.show_all()
+    print(bla)
     
