@@ -5,7 +5,7 @@ import pandas as pd #pip install pandas
 import hashlib
 
 from os.path import expanduser
-    
+
 
 class dbManager:
     
@@ -24,7 +24,18 @@ class dbManager:
         
     def close(self):
         self.db.close()
-        
+
+    def create_table_album(self):
+        cursor = self.db.cursor()
+        cursor.execute('''
+            CREATE TABLE Album(
+              AlbumId       INT PRIMARY KEY NOT NULL,
+              Src           TEXT NOT NULL,
+              Date          DATETIME,
+              Caption       TEXT
+            );
+        ''')
+
     def create_table_file(self):
         cursor = self.db.cursor()
         cursor.execute('''
@@ -35,7 +46,9 @@ class dbManager:
               Access        INT,
               Date          DATETIME,
               Type          INT,
-              Caption       TEXT
+              Caption       TEXT,
+              AlbumId       INTEGER NOT NULL,
+              FOREIGN KEY(AlbumId) REFERENCES Album(AlbumId) ON DELETE CASCADE
             );
         ''')
             
@@ -55,34 +68,61 @@ class dbManager:
             
     def gen_id(self, long_string):   
         val = hashlib.sha1(long_string.encode('utf8'))          
-        return int(val.hexdigest()[:10],base=16)     
-            
-    def add_file(self, fileObject):
+        return int(val.hexdigest()[:10],base=16)
+
+    def persist_album(self, albumObject):
+
+        unique_id = self.gen_id(albumObject.src)
+        cursor = self.db.cursor()
+
+        try:
+            cursor.execute('''
+            INSERT INTO Album(AlbumId, Src, Date, Caption)
+            VALUES(?,?,?,?)''',
+                           (unique_id,
+                            albumObject.src,
+                            albumObject.date,
+                            albumObject.caption))
+
+            for file in albumObject.file_list:
+                self.persist_file(file, unique_id)
+
+        except sqlite3.IntegrityError as e:
+            print(e)
+            print("WARNUNG: Möglicherweise kennt die Datenbank kennt dieses Album bereits: " + str(
+                self.gen_id(albumObject.src)))
+        finally:
+            self.db.commit()
+
+    def persist_file(self, fileObject, album_id, commit = False):
         
         unique_id = self.gen_id(fileObject.src)
         cursor = self.db.cursor()
         
-        try:            
+        try:
             cursor.execute('''
-            INSERT INTO File(FileId, SrcOnline, Access, Date, Type, Caption)
-            VALUES(?,?,?,?,?,?)''', 
+            INSERT INTO File(FileId, SrcOnline, Access, Date, Type, Caption, AlbumId)
+            VALUES(?,?,?,?,?,?,?)''',
             (unique_id,
              fileObject.src,
              fileObject.access.value,
-             fileObject.date, 
+             fileObject.date,
              fileObject.type.value,
-             fileObject.caption))
-            
+             fileObject.caption,
+             album_id))
+
             for comment in fileObject.comment_list:
-                self.add_comment(comment, unique_id)
-            
+                self.persist_comment(comment, unique_id)
+
         except sqlite3.IntegrityError as e:
-            print("WARNUNG: Die Datenbank kennt dieses Foto/Video bereits: " + str(self.gen_id(fileObject.src)))
             print(e)
+            print("WARNUNG: Möglicherweise kennt die Datenbank kennt dieses Foto/Video bereits: " + str(self.gen_id(fileObject.src)))
+            print("         Oder es fehlt eine eindeutige Zuordnung zu einem Album.")
         finally:
-            self.db.commit()
+            if (commit):
+                self.db.commit()
                     
-    def add_comment(self, comm, file_id, commit = False):
+    def persist_comment(self, comm, file_id, commit = False):
         cursor = self.db.cursor()
         cursor.execute('''
             INSERT INTO Comment(UserName, Date, Like, Text, FileId)
@@ -97,6 +137,7 @@ class dbManager:
             self.db.commit()
 
     def select(self):
+        print(pd.read_sql_query('''SELECT * FROM Album''', self.db))
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
         print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
@@ -117,31 +158,27 @@ class dbManager:
             print(name[0])
             
     def reset(self):
+        self.drop_table("Album")
         self.drop_table("File")
         self.drop_table("Comment")
+        self.create_table_album()
         self.create_table_file()
         self.create_table_comment()
 
 if __name__ == "__main__":
-    
+
     from fileclass import FileClass
+    from albumclass import AlbumClass
     
     man = dbManager()
-#     man.create_table_file()
-#     man.create_table_comment()
-#     man.add_file(FileClass().example_data())
+    # man.persist_album(AlbumClass().example_data())
+    man.reset()
 
-#     man.reset()
-    
     man.select()
 
     
 #     test = "http://alihk.peekaboocdn.com/hk/pictures/original/201804/537296975/430397421240478d91b06eb64b39187fd42b1869ec6a01e09ff99bbbec0834dc.jpg"
-    
-#     print(man.gen_id(test))
-    
-#     530448612306362800257013452669206305184754401186
-#     399065182187
+
     
     
     

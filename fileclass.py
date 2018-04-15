@@ -41,17 +41,7 @@ class FileClass:
         out += "Comments: \n"
         for com in self.comment_list:
             out += "   " + str(com) + "\n"
-        return out  
-
-    # def set_access(self, arg):
-    #
-    #     mapping = {
-    #         "Family Members and Fans" : Access.all,
-    #         "Family Members" : Access.family,
-    #         "Parents" : Access.parents,
-    #         "Only Me" : Access.me
-    #     }
-    #     return mapping[arg]
+        return out
 
     def add_comment(self, comm):
         self.comment_list.extend(comm)
