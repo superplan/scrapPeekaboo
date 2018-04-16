@@ -7,7 +7,7 @@ import hashlib
 from os.path import expanduser
 
 
-class dbManager:
+class DBManager:
     
     def __init__(self):
         
@@ -28,7 +28,7 @@ class dbManager:
     def create_table_album(self):
         cursor = self.db.cursor()
         cursor.execute('''
-            CREATE TABLE Album(
+            CREATE TABLE if not exists Album(
               AlbumId       INT PRIMARY KEY NOT NULL,
               Src           TEXT NOT NULL,
               Date          DATETIME,
@@ -39,7 +39,7 @@ class dbManager:
     def create_table_file(self):
         cursor = self.db.cursor()
         cursor.execute('''
-            CREATE TABLE File(
+            CREATE TABLE if not exists File(
               FileId        INT PRIMARY KEY NOT NULL,
               SrcOnline     TEXT NOT NULL,
               SrcLocal      TEXT,
@@ -55,7 +55,7 @@ class dbManager:
     def create_table_comment(self):
         cursor = self.db.cursor()
         cursor.execute('''
-            CREATE TABLE Comment(
+            CREATE TABLE if not exists Comment(
               CommentId     INTEGER PRIMARY KEY,
               UserName      TEXT NOT NULL,
               Date          DATETIME,
@@ -141,6 +141,11 @@ class dbManager:
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
         print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
+    def get_album_links(self):
+        self.db.row_factory = lambda cursor, row: row[0]
+        cursor = self.db.cursor()
+        return cursor.execute('SELECT Src FROM Album').fetchall()
+
     def delete(self):
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM File WHERE FileId<>'42'")
@@ -148,7 +153,7 @@ class dbManager:
         
     def drop_table(self, name):
         cursor = self.db.cursor()
-        cursor.execute("DROP TABLE "+name)
+        cursor.execute("DROP TABLE if exists "+name)
         self.db.commit()
     
     def show_tables(self):        
@@ -170,7 +175,7 @@ if __name__ == "__main__":
     from fileclass import FileClass
     from albumclass import AlbumClass
     
-    man = dbManager()
+    man = DBManager()
     # man.persist_album(AlbumClass().example_data())
     man.reset()
 
