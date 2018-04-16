@@ -70,7 +70,7 @@ class ScrapPeekaboo:
         
             # Calculate new scroll height and compare with last scroll height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
-            if new_height == last_height:
+            if new_height <= last_height:
                 break
             last_height = new_height
         
@@ -149,33 +149,41 @@ class ScrapPeekaboo:
         albumListe = self.driver.find_elements_by_class_name("main-list-item")
 
         loop_nr = 0
-        for albumListeElement in albumListe:
+        for albumListeElement in reversed(albumListe):
 
-            if loop_nr >= days_max:
-                break;
+            if loop_nr >= days_max and days_max > 0:
+                return
 
             loop_nr += 1
 
-            album = AlbumClass()
 
             # source
-            albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
-            album.src = albumLink.get_attribute("href")
+            # self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
+            # time.sleep(2)
+            try:
+                albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
+                album = AlbumClass()
+                album.src = albumLink.get_attribute("href")
 
-            if type(self.db) is DBManager:
-                self.db.persist_album(album)               
-            else:
-                print(album)
+                if type(self.db) is DBManager:
+                    self.db.persist_album(album)
+                else:
+                    print(album)
+
+            except NoSuchElementException:
+                textLink = albumListeElement.find_element_by_class_name("text-more")
+                print(textLink)
 
     def get_album_links(self):
         
         self.login()
 
         ### herunterscrollen(wartezeit, anzahl scrolls)
-        self.scroll(pauseTime = 1, limit = -1)
+        # self.scroll(pauseTime = 5, limit = 999)
+        self.click_through_time(5)
 
         ### hole Daten
-        self.scrap_album_sources(days_max = 5)
+        self.scrap_album_sources(days_max = -1)
     
         ### beende selenium        
         self.driver.close()
@@ -197,32 +205,69 @@ class ScrapPeekaboo:
     def get_files_in_album(self, link):
         
         self.driver.get(link)
-        WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "main-list-item")))
-        file_list = self.driver.find_elements_by_class_name("main-list-item")
+        WebDriverWait(self.driver, self.TIME_OUT).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
 
-        for file_elem in file_list:
-            afile = self.scrap_file(file_elem)
-            
-        if type(self.db) is DBManager:
-            self.db.persist_file(afile, self.db.gen_id(link), True)               
-        else:
-            print(afile)
-        
-    def play(self):
-        self.login()
-        time.sleep(4)
-        self.scroll(pauseTime = 1, limit = -1)
+        try:
+            text_entry = self.driver.find_element_by_class_name("daily-text")
+            afile = self.scrap_text_file(text_entry, link)
 
-        ####################
-        ### Ab hier kann man was ausprobieren
-        # self.driver.get("http://peekaboomoments.com/album_detail/537123580?id=568089200131567686")
-        self.driver.get("http://peekaboomoments.com/album_detail/537123580?id=566125763906236726")
-        WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "main-list-item")))
-        pic_list = self.driver.find_elements_by_class_name("main-list-item")
+            if type(self.db) is DBManager:
+                self.db.persist_file(afile, self.db.gen_id(link), True)
+            else:
+                print(afile)
 
-        one_pic = pic_list[2]
+        except NoSuchElementException:
 
-        print(self.scrap_file(one_pic))
+            # Foto oder Video
+            file_list = self.driver.find_elements_by_class_name("main-list-item")
+
+            for file_elem in file_list:
+                afile = self.scrap_file(file_elem)
+
+                if type(self.db) is DBManager:
+                    self.db.persist_file(afile, self.db.gen_id(link), True)
+                else:
+                    print(afile)
+
+    def scrap_text_file(self, text_entry, src_link):
+
+        res = FileClass()
+
+        # type
+        res.type = FileType.text
+
+        # source link
+        res.src = src_link
+
+        # date and access
+        parent = self.driver.find_element_by_class_name("detail")
+        child = parent.find_element_by_tag_name("mark")
+        tmp_date_and_access = parent.text.replace(child.text, '')
+        (tmp_date, tmp_access) = utils.format_date_access(tmp_date_and_access)
+        res.date = tmp_date
+        res.access = Access.set(tmp_access)
+
+
+        # comments
+        comments_list = self.driver.find_elements_by_class_name("comments-list-item")
+
+        for com in comments_list:
+            res.add_comment([self.scrap_comment(com, True)])
+
+        return res
+
+    def click_through_time(self, wait_time):
+        years = self.driver.find_elements_by_class_name("timeline-wrap-item")
+        # skip "Today"
+        for year in years[1:2]:
+            year.click()
+            time.sleep(wait_time)
+            months = year.find_elements_by_class_name("item-btn")
+            # skip clicking on the year a second time
+            for month in months[1:2]:
+                month.click()
+                time.sleep(wait_time)
 
     # create a file-object and fill values
     def scrap_file(self, file_elem):
@@ -291,18 +336,23 @@ class ScrapPeekaboo:
         for com in comments_list:
             res.add_comment([self.scrap_comment(com)])
 
-
         return res
 
     # create a comment-object and fill with values
-    def scrap_comment(self, comment_elem):
+    def scrap_comment(self, comment_elem, text_file = False):
 
         # scroll to comment, otherwise it is not visible!
         self.driver.execute_script("arguments[0].scrollIntoView();", comment_elem)
 
         # set attributes
         res = CommentClass()
-        tmp_text = comment_elem.find_element_by_tag_name("span").text.split(' : ')
+
+        if not text_file:
+            tmp_text = comment_elem.find_element_by_tag_name("span").text.split(' : ')
+            print("hi")
+        else:
+            tmp_text = comment_elem.find_element_by_class_name("comments-list-content").text.split(' : ')
+
         res.who = tmp_text[0]
         res.text = tmp_text[1]
         res.is_like = (res.text == "Liked this photo")
@@ -313,13 +363,23 @@ class ScrapPeekaboo:
         res.date = tmp_date.text
         return res
 
+    def play(self):
+        self.login()
+
+        ####################
+        ### Ab hier kann man was ausprobieren
+        # ohne commentar
+        # http://peekaboomoments.com/daily_detail/537123580?id=561216195715658404
+        # mit kommentar
+        # http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147
+        # self.get_files_in_album("http://peekaboomoments.com/album_detail/537123580?id=561212659812528779")
+        self.scrap_album_sources(1)
 
 if __name__ == "__main__":
 
 
     bla = ScrapPeekaboo()
-    bla.run()
-    # bla.play()
+    bla.play()
     
 
 ### Hiermit wird direkt nach unten gescrollt

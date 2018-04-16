@@ -6,6 +6,11 @@ Peekaboo Download
 from scrappeekaboo import ScrapPeekaboo
 from dbmanager import DBManager
 
+# first run
+def setup():
+    db = DBManager()
+    db.reset()
+
 # get album links
 def get_album_links():
     db = DBManager()
@@ -26,7 +31,9 @@ def get_album_content():
 def view():
     db = DBManager()
     db.select()  
-    
+
+setup()
+get_album_links()
 # get_album_content()
-view()
+# view()
 

@@ -51,7 +51,7 @@ class DBManager:
               FOREIGN KEY(AlbumId) REFERENCES Album(AlbumId) ON DELETE CASCADE
             );
         ''')
-            
+
     def create_table_comment(self):
         cursor = self.db.cursor()
         cursor.execute('''
@@ -137,6 +137,8 @@ class DBManager:
             self.db.commit()
 
     def select(self):
+        pd.options.display.max_colwidth = 200
+        pd.set_option('display.width', 200)
         print(pd.read_sql_query('''SELECT * FROM Album''', self.db))
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
         print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))

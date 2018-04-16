@@ -20,6 +20,7 @@ class Access(Enum):
 class FileType(Enum):
     foto = 1
     video = 2
+    text = 3
 
 class FileClass:
     
