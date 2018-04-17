@@ -158,14 +158,14 @@ class ScrapPeekaboo:
 
 
             # source
-            # self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
-            # time.sleep(2)
+            self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
+            time.sleep(2)
             try:
                 albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
                 album = AlbumClass()
                 album.src = albumLink.get_attribute("href")
 
-                if type(self.db) is DBManager:
+                if type(self.db) is DBManager and False:
                     self.db.persist_album(album)
                 else:
                     print(album)
@@ -206,7 +206,7 @@ class ScrapPeekaboo:
         
         self.driver.get(link)
         WebDriverWait(self.driver, self.TIME_OUT).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
 
         try:
             text_entry = self.driver.find_element_by_class_name("daily-text")
@@ -373,7 +373,30 @@ class ScrapPeekaboo:
         # mit kommentar
         # http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147
         # self.get_files_in_album("http://peekaboomoments.com/album_detail/537123580?id=561212659812528779")
-        self.scrap_album_sources(1)
+
+
+        # self.scrap_album_sources(1)
+
+
+        albumListe = self.driver.find_elements_by_class_name("main-list-item")
+
+        print(len(albumListe))
+
+        for albumListeElement in albumListe:
+
+            # source
+            # self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
+            # time.sleep(2)
+            try:
+                albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
+                link = albumLink.get_attribute("href")
+                print(link)
+
+            except NoSuchElementException:
+                textLink = albumListeElement.find_element_by_class_name("text-more")
+                link = textLink.get_attribute("href")
+                print(link)
+
 
 if __name__ == "__main__":
 
