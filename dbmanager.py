@@ -18,9 +18,9 @@ class DBManager:
         ### Wo bin ich hier?
         home = expanduser("~")
         if home == r'C:\Users\michaelk':
-            self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/' + database)
+            self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/' + self.database_name)
         else:
-            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/' + database)
+            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/' + self.database_name)
 
         self.db.execute("PRAGMA foreign_keys = ON")
         ### Helfer
@@ -183,6 +183,14 @@ class DBManager:
 
 if __name__ == "__main__":
 
+    def find_missing(list1, list2):
+        out = []
+        for elem in list1:
+            if elem not in list2:
+                out += [elem]
+                
+        print(out)
+        
     from fileclass import FileClass
     from albumclass import AlbumClass
 #    test = "http://alihk.peekaboocdn.com/hk/pictures/original/201804/537296975/430397421240478d91b06eb64b39187fd42b1869ec6a01e09ff99bbbec0834dc.jpg"
@@ -199,10 +207,18 @@ if __name__ == "__main__":
     conn2.row_factory = lambda cursor, row: row[0]
     c2 = conn2.cursor()
     list_444 = c2.execute('SELECT Date FROM Album').fetchall()   
-
-    print(sorted(set(list_436) - set(list_444)))
+    
+    conn3 = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo.db' )
+    conn3.row_factory = lambda cursor, row: row[0]
+    c3 = conn3.cursor()
+    list_4444 = c3.execute('SELECT Date FROM Album').fetchall()  
+    
+    find_missing(list_444, list_4444)
+    
+    
+#     print(sorted(set(list_4444) - set(list_444)))
    
-    man = DBManager("peekaboo_436.db")
-    man.sel("SELECT * FROM Album where Date = '01.08.2015'")
+#     man = DBManager("peekaboo.db")
+#     man.sel("SELECT * FROM Album where Date = '31.07.2015'")
     
     

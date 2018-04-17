@@ -183,7 +183,7 @@ class ScrapPeekaboo:
         self.login()
 
         ### herunterscrollen(wartezeit zwischen scrolls)
-        self.click_through_time(100)
+        self.click_through_time(1)
 
         ### hole Daten
         self.scrap_album_sources(days_max = -1)
