@@ -32,7 +32,7 @@ def view():
     db = DBManager()
     db.select()  
 
-setup()
+# setup()
 get_album_links()
 # view()
 

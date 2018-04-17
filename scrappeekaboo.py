@@ -183,7 +183,9 @@ class ScrapPeekaboo:
         self.login()
 
         ### herunterscrollen(wartezeit zwischen scrolls)
-        self.click_through_time(1)
+        # self.click_through_time(5)
+        self.scroll_down(5)
+        # self.scroll_down_inf(0.1)
 
         ### hole Daten
         self.scrap_album_sources(days_max = -1)
@@ -262,16 +264,44 @@ class ScrapPeekaboo:
         return res
 
     def click_through_time(self, wait_time):
-        years = self.driver.find_elements_by_class_name("timeline-wrap-item")
-        # skip "Today"
-        for year in years[1:]:
-            self.driver.execute_script("arguments[0].click();", year)
-            time.sleep(wait_time)
-            months = year.find_elements_by_class_name("item-btn")
-            # skip clicking on the year a second time
-            for month in months[1:]:
-                self.driver.execute_script("arguments[0].click();", month)
+        loops = 0
+        while loops < 2:
+            loops += 1
+
+            years = self.driver.find_elements_by_class_name("timeline-wrap-item")
+            # skip "Today"
+            for year in years[1:]:
+                self.driver.execute_script("arguments[0].click();", year)
                 time.sleep(wait_time)
+                months = year.find_elements_by_class_name("item-btn")
+                # skip clicking on the year a second time
+                for month in months[1:]:
+                    self.driver.execute_script("arguments[0].click();", month)
+                    time.sleep(wait_time)
+
+        albumListe = self.driver.find_elements_by_class_name("main-list-item")
+        for elem in albumListe:
+            self.driver.execute_script("arguments[0].scrollIntoView();", elem)
+            time.sleep(wait_time)
+
+    def scroll_down(self, wait_time):
+
+        while True:
+
+            WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "dropload-down")))
+            alben_vor_scroll = len(self.driver.find_elements_by_class_name("main-list-item"))
+            letztes_element = self.driver.find_element_by_class_name("dropload-down")
+            self.driver.execute_script("arguments[0].scrollIntoView();", letztes_element)
+            time.sleep(wait_time)
+            alben_nach_scroll = len(self.driver.find_elements_by_class_name("main-list-item"))
+
+            if alben_vor_scroll == alben_nach_scroll:
+                return
+
+    def scroll_down_inf(self, wait_time):
+        while True:
+            self.driver.execute_script("window.scrollBy(0,10)", "")
+            time.sleep(wait_time)
 
     # create a file-object and fill values
     def scrap_file(self, file_elem):
@@ -386,18 +416,9 @@ class ScrapPeekaboo:
 if __name__ == "__main__":
 
 
-    bla = ScrapPeekaboo()
-    bla.play()
+    # bla = ScrapPeekaboo()
+    # bla.play()
     
-
-### Hiermit wird direkt nach unten gescrollt
-
-#driver.find_element_by_xpath("/html/body/div[2]/div/div[7]/ul/li[5]").click()
-#time.sleep(1)
-#driver.find_element_by_xpath("/html/body/div[2]/div/div[7]/ul/li[5]/ul/li/a").click()
-
-### dann kann man das unterste element auswählen und sich nach oben durcharbeiten
-### mann muss aber irgendwann wieder nach oben scrollen
-
-#elem = driver.find_element_by_xpath("//*[@id='moments_4_-1']")
-#print(elem.get_attribute("data-param"))
+    list1 = ["1", "3", "5"]
+    list2 = ["1", "2", "3", "4", "5"]
+    print(list(set(list2) - set(list1)))

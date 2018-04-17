@@ -183,13 +183,6 @@ class DBManager:
 
 if __name__ == "__main__":
 
-    def find_missing(list1, list2):
-        out = []
-        for elem in list1:
-            if elem not in list2:
-                out += [elem]
-                
-        print(out)
         
     from fileclass import FileClass
     from albumclass import AlbumClass
@@ -197,24 +190,13 @@ if __name__ == "__main__":
 
     
     import sqlite3 as db
-    
-    conn = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo_436.db' )
-    conn.row_factory = lambda cursor, row: row[0]
-    c = conn.cursor()
-    list_436 = c.execute('SELECT Date FROM Album').fetchall()
-    
-    conn2 = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo_444.db' )
-    conn2.row_factory = lambda cursor, row: row[0]
-    c2 = conn2.cursor()
-    list_444 = c2.execute('SELECT Date FROM Album').fetchall()   
+
     
     conn3 = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo.db' )
     conn3.row_factory = lambda cursor, row: row[0]
     c3 = conn3.cursor()
     list_4444 = c3.execute('SELECT Date FROM Album').fetchall()  
-    
-    find_missing(list_444, list_4444)
-    
+
     
 #     print(sorted(set(list_4444) - set(list_444)))
    
