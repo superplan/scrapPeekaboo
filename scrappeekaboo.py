@@ -108,7 +108,7 @@ class ScrapPeekaboo:
             # album = AlbumClass()
             #
             # tmp_date = self.driver.find_element_by_class_name("detail-date").text
-            # album.date = utils.format_date(tmp_date)
+            # album.date = utils.format_date_file(tmp_date)
             #
             # tmp_caption = self.driver.find_element_by_class_name("describe-content").text
             # if tmp_caption != "Write down the story of this day...":
@@ -156,31 +156,34 @@ class ScrapPeekaboo:
 
             loop_nr += 1
 
-
-            # source
-            self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
-            time.sleep(2)
+            try:
+                meta_info = albumListeElement.find_element_by_class_name("update")
+                tmp_date = meta_info.find_element_by_tag_name("span").text
+            except NoSuchElementException:
+                print(meta_info.text)
+                continue           
+            
             try:
                 albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
-                album = AlbumClass()
-                album.src = albumLink.get_attribute("href")
-
-                if type(self.db) is DBManager and False:
-                    self.db.persist_album(album)
-                else:
-                    print(album)
 
             except NoSuchElementException:
-                textLink = albumListeElement.find_element_by_class_name("text-more")
-                print(textLink)
-
+                albumLink = albumListeElement.find_element_by_class_name("text-more")
+                    
+            album = AlbumClass()
+            album.src = albumLink.get_attribute("href")
+            album.date = utils.format_date_album(tmp_date)
+            
+            if type(self.db) is DBManager:
+                self.db.persist_album(album)                
+            else:
+                print(album)
+                    
     def get_album_links(self):
         
         self.login()
 
-        ### herunterscrollen(wartezeit, anzahl scrolls)
-        # self.scroll(pauseTime = 5, limit = 999)
-        self.click_through_time(5)
+        ### herunterscrollen(wartezeit zwischen scrolls)
+        self.click_through_time(100)
 
         ### hole Daten
         self.scrap_album_sources(days_max = -1)
@@ -230,15 +233,16 @@ class ScrapPeekaboo:
                 else:
                     print(afile)
 
-    def scrap_text_file(self, text_entry, src_link):
-
+    def scrap_text_file(self, text_entry):
+        
+        text_entry.click()
+        WebDriverWait(self.driver, self.TIME_OUT).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".daily-text")))
+        
         res = FileClass()
 
         # type
         res.type = FileType.text
-
-        # source link
-        res.src = src_link
 
         # date and access
         parent = self.driver.find_element_by_class_name("detail")
@@ -260,13 +264,13 @@ class ScrapPeekaboo:
     def click_through_time(self, wait_time):
         years = self.driver.find_elements_by_class_name("timeline-wrap-item")
         # skip "Today"
-        for year in years[1:2]:
-            year.click()
+        for year in years[1:]:
+            self.driver.execute_script("arguments[0].click();", year)
             time.sleep(wait_time)
             months = year.find_elements_by_class_name("item-btn")
             # skip clicking on the year a second time
-            for month in months[1:2]:
-                month.click()
+            for month in months[1:]:
+                self.driver.execute_script("arguments[0].click();", month)
                 time.sleep(wait_time)
 
     # create a file-object and fill values
@@ -304,7 +308,7 @@ class ScrapPeekaboo:
                 '{$(".view").hide(), $(".view-wrap-describe").empty(), $(".view-wrap-box").remove(), $(".view-wrap-loading").show(), $(".view-wrap-load").hide();var e = $(".view-content").find("video");0 != e.length && e.each(function() {$(this).get(0).pause()}), T = 0, w = {}}')
 
         # date
-        res.date = utils.format_date(self.driver.find_element_by_class_name("detail-date").text)
+        res.date = utils.format_date_file(self.driver.find_element_by_class_name("detail-date").text)
 
         # access (Berechtigung) and caption
         ## open edit-popup
@@ -375,27 +379,8 @@ class ScrapPeekaboo:
         # self.get_files_in_album("http://peekaboomoments.com/album_detail/537123580?id=561212659812528779")
 
 
-        # self.scrap_album_sources(1)
+        self.scrap_album_sources(20)
 
-
-        albumListe = self.driver.find_elements_by_class_name("main-list-item")
-
-        print(len(albumListe))
-
-        for albumListeElement in albumListe:
-
-            # source
-            # self.driver.execute_script("arguments[0].scrollIntoView();", albumListeElement)
-            # time.sleep(2)
-            try:
-                albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
-                link = albumLink.get_attribute("href")
-                print(link)
-
-            except NoSuchElementException:
-                textLink = albumListeElement.find_element_by_class_name("text-more")
-                link = textLink.get_attribute("href")
-                print(link)
 
 
 if __name__ == "__main__":

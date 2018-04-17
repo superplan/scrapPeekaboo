@@ -9,14 +9,18 @@ from os.path import expanduser
 
 class DBManager:
     
-    def __init__(self):
+    def __init__(self, database = ""):
         
+        self.database_name = "peekaboo.db"
+        if len(database) > 0:
+            self.database_name = database
+            
         ### Wo bin ich hier?
         home = expanduser("~")
         if home == r'C:\Users\michaelk':
-            self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo.db')
+            self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/' + database)
         else:
-            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/peekaboo.db')
+            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/' + database)
 
         self.db.execute("PRAGMA foreign_keys = ON")
         ### Helfer
@@ -143,6 +147,11 @@ class DBManager:
         print(pd.read_sql_query('''SELECT * FROM File''', self.db))
         print(pd.read_sql_query('''SELECT * FROM Comment''', self.db))
         
+    def sel(self, string):
+        pd.options.display.max_colwidth = 200
+        pd.set_option('display.width', 200)
+        print(pd.read_sql_query(string, self.db))
+        
     def get_album_links(self):
         self.db.row_factory = lambda cursor, row: row[0]
         cursor = self.db.cursor()
@@ -176,24 +185,24 @@ if __name__ == "__main__":
 
     from fileclass import FileClass
     from albumclass import AlbumClass
-    
-    man = DBManager()
-    # man.persist_album(AlbumClass().example_data())
-    man.reset()
-
-    man.select()
+#    test = "http://alihk.peekaboocdn.com/hk/pictures/original/201804/537296975/430397421240478d91b06eb64b39187fd42b1869ec6a01e09ff99bbbec0834dc.jpg"
 
     
-#     test = "http://alihk.peekaboocdn.com/hk/pictures/original/201804/537296975/430397421240478d91b06eb64b39187fd42b1869ec6a01e09ff99bbbec0834dc.jpg"
+    import sqlite3 as db
+    
+    conn = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo_436.db' )
+    conn.row_factory = lambda cursor, row: row[0]
+    c = conn.cursor()
+    list_436 = c.execute('SELECT Date FROM Album').fetchall()
+    
+    conn2 = db.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/peekaboo_444.db' )
+    conn2.row_factory = lambda cursor, row: row[0]
+    c2 = conn2.cursor()
+    list_444 = c2.execute('SELECT Date FROM Album').fetchall()   
 
-    
-    
-    
-    
-    
-    
-    
-    man.close() 
-    
+    print(sorted(set(list_436) - set(list_444)))
+   
+    man = DBManager("peekaboo_436.db")
+    man.sel("SELECT * FROM Album where Date = '01.08.2015'")
     
     

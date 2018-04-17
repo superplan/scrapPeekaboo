@@ -34,6 +34,5 @@ def view():
 
 setup()
 get_album_links()
-# get_album_content()
 # view()
 
