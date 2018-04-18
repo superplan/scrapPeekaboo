@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 from fileclass import FileClass, FileType, Access
 from dbmanager import DBManager
@@ -20,17 +20,17 @@ import time
 
 from selenium.webdriver.common.action_chains import ActionChains
 
+
 class ScrapPeekaboo:
-    
     ### Konstanten
     TIME_OUT = 10
-    
-    def __init__(self):    
-        
+
+    def __init__(self):
+
         ### Selenium Konfig
         self.driver = webdriver.Firefox()
         self.driver.get("http://peekaboomoments.com/en/home/537123580")
-        
+
         ### Datenbank
         self.db = ""
 
@@ -42,56 +42,55 @@ class ScrapPeekaboo:
         elem.clear()
         elem.send_keys("qqquuu")
         elem = self.driver.find_element_by_xpath("//input[@value='Sign in']")
-        elem.send_keys(Keys.RETURN)   
-             
+        elem.send_keys(Keys.RETURN)
+
         ### Warte bis Seite geladen hat
         time.sleep(4)
-  
-  
+
     ### hiermit wird nach unten bis zum letzten vorgeladenen element gescrollt
     ### so kann man sukzessive nach ganz unten kommen, sodass alle elemente geladen sind
-    #https://stackoverflow.com/questions/20986631/how-can-i-scroll-a-web-page-using-selenium-webdriver-in-python?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-    def scroll(self, pauseTime, limit):
-        
+    # https://stackoverflow.com/questions/20986631/how-can-i-scroll-a-web-page-using-selenium-webdriver-in-python?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+    def scroll(self, pause_time, limit):
+
         # Get scroll height
         last_height = self.driver.execute_script("return document.body.scrollHeight")
-        
+
         scrolls = 0
         while True and scrolls <= limit:
-            
+
             # count scrolls
             scrolls += 1
-            
+
             # Scroll down to bottom
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        
+
             # Wait to load page
-            time.sleep(pauseTime)
-        
+            time.sleep(pause_time)
+
             # Calculate new scroll height and compare with last scroll height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height <= last_height:
                 break
             last_height = new_height
-        
+
     def scrap(self, days_max):
-        albumListe = self.driver.find_elements_by_class_name("main-list-item")
-        
+        album_liste = self.driver.find_elements_by_class_name("main-list-item")
+
         loop_nr = 0
-        for albumListeElement in albumListe:
-            
+        for albumListeElement in album_liste:
+
             if loop_nr >= days_max:
-                break;
-                
-            loop_nr +=1
+                break
+
+            loop_nr += 1
 
             album = AlbumClass()
 
             # Source
-            albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
-            album.src = albumLink.get_attribute("href")
+            album_link = albumListeElement.find_element_by_class_name("swiper-detail-enter")
+            album.src = album_link.get_attribute("href")
             # window_before = self.driver.window_handles[0]
-            # albumLink.click()
+            # album_link.click()
             #
             # ### Warte bis Album geladen hat
             # WebDriverWait(self.driver, self.TIME_OUT).until(EC.new_window_is_opened(self.driver.window_handles))
@@ -103,7 +102,7 @@ class ScrapPeekaboo:
             # bildListe = self.driver.find_elements_by_class_name("pic")
             #
             #
-            # print(str(loop_nr) + " von " + str(len(albumListe)))
+            # print(str(loop_nr) + " von " + str(len(album_liste)))
             #
             # album = AlbumClass()
             #
@@ -143,15 +142,17 @@ class ScrapPeekaboo:
             # self.driver.switch_to_window(window_before)
             #
             # album.show_all()
-#             break;
+
+    #             break;
 
     def scrap_album_sources(self, days_max):
-        albumListe = self.driver.find_elements_by_class_name("main-list-item")
+        global meta_info
+        album_liste = self.driver.find_elements_by_class_name("main-list-item")
 
         loop_nr = 0
-        for albumListeElement in reversed(albumListe):
+        for albumListeElement in reversed(album_liste):
 
-            if loop_nr >= days_max and days_max > 0:
+            if loop_nr >= days_max > 0:
                 return
 
             loop_nr += 1
@@ -161,25 +162,25 @@ class ScrapPeekaboo:
                 tmp_date = meta_info.find_element_by_tag_name("span").text
             except NoSuchElementException:
                 print(meta_info.text)
-                continue           
-            
+                continue
+
             try:
-                albumLink = albumListeElement.find_element_by_class_name("swiper-detail-enter")
+                album_link = albumListeElement.find_element_by_class_name("swiper-detail-enter")
 
             except NoSuchElementException:
-                albumLink = albumListeElement.find_element_by_class_name("text-more")
-                    
+                album_link = albumListeElement.find_element_by_class_name("text-more")
+
             album = AlbumClass()
-            album.src = albumLink.get_attribute("href")
+            album.src = album_link.get_attribute("href")
             album.date = utils.format_date_album(tmp_date)
-            
+
             if type(self.db) is DBManager:
-                self.db.persist_album(album)                
+                self.db.persist_album(album)
             else:
                 print(album)
-                    
+
     def get_album_links(self):
-        
+
         self.login()
 
         ### herunterscrollen(wartezeit zwischen scrolls)
@@ -188,27 +189,27 @@ class ScrapPeekaboo:
         # self.scroll_down_inf(0.1)
 
         ### hole Daten
-        self.scrap_album_sources(days_max = -1)
-    
+        self.scrap_album_sources(days_max=-1)
+
         ### beende selenium        
         self.driver.close()
-        
+
     def get_album_content(self, links):
-        
+
         if type(self.db) is not DBManager:
             print("keine Datenbank gefunden")
             return
-            
+
         self.login()
 
         for link in links:
             self.get_files_in_album(link)
-    
+
         ### beende selenium        
         self.driver.close()
-        
+
     def get_files_in_album(self, link):
-        
+
         self.driver.get(link)
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
@@ -236,11 +237,11 @@ class ScrapPeekaboo:
                     print(afile)
 
     def scrap_text_file(self, text_entry):
-        
+
         text_entry.click()
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, ".daily-text")))
-        
+
         res = FileClass()
 
         # type
@@ -253,7 +254,6 @@ class ScrapPeekaboo:
         (tmp_date, tmp_access) = utils.format_date_access(tmp_date_and_access)
         res.date = tmp_date
         res.access = Access.set(tmp_access)
-
 
         # comments
         comments_list = self.driver.find_elements_by_class_name("comments-list-item")
@@ -279,8 +279,8 @@ class ScrapPeekaboo:
                     self.driver.execute_script("arguments[0].click();", month)
                     time.sleep(wait_time)
 
-        albumListe = self.driver.find_elements_by_class_name("main-list-item")
-        for elem in albumListe:
+        album_liste = self.driver.find_elements_by_class_name("main-list-item")
+        for elem in album_liste:
             self.driver.execute_script("arguments[0].scrollIntoView();", elem)
             time.sleep(wait_time)
 
@@ -288,7 +288,8 @@ class ScrapPeekaboo:
 
         while True:
 
-            WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "dropload-down")))
+            WebDriverWait(self.driver, self.TIME_OUT).until(
+                EC.element_to_be_clickable((By.CLASS_NAME, "dropload-down")))
             alben_vor_scroll = len(self.driver.find_elements_by_class_name("main-list-item"))
             letztes_element = self.driver.find_element_by_class_name("dropload-down")
             self.driver.execute_script("arguments[0].scrollIntoView();", letztes_element)
@@ -363,6 +364,7 @@ class ScrapPeekaboo:
         self.driver.execute_script("document.getElementsByClassName('operate-comment')[0].style.display='block';")
         file_elem.find_element_by_class_name("operate-comment").click()
         # hier ist entweder comment-null oder comment-popup
+        # time.sleep(2)
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".comment-popup, .comment-null")))
         comments_list = file_elem.find_elements_by_class_name("comment-content-item")
@@ -373,52 +375,48 @@ class ScrapPeekaboo:
         return res
 
     # create a comment-object and fill with values
-    def scrap_comment(self, comment_elem, text_file = False):
+    def scrap_comment(self, comment_elem, text_file=False):
 
         # scroll to comment, otherwise it is not visible!
-        self.driver.execute_script("arguments[0].scrollIntoView();", comment_elem)
+        # self.driver.execute_script("arguments[0].scrollIntoView();", comment_elem)
 
         # set attributes
         res = CommentClass()
 
         if not text_file:
-            tmp_text = comment_elem.find_element_by_tag_name("span").text.split(' : ')
-            print("hi")
+            # tmp_text = comment_elem.find_element_by_tag_name("span").text.split(' : ')
+            tmp_text = self.driver.execute_script('return arguments[0].getElementsByTagName("span")[0].innerText;', comment_elem).split(' : ')
         else:
             tmp_text = comment_elem.find_element_by_class_name("comments-list-content").text.split(' : ')
 
-        res.who = tmp_text[0]
-        res.text = tmp_text[1]
-        res.is_like = (res.text == "Liked this photo")
+        if len(tmp_text) != 2:
+            print(tmp_text)
+            time.sleep(100)
+        else:
+            res.who = tmp_text[0]
+            res.text = tmp_text[1]
+            res.is_like = (res.text == "Liked this photo")
 
         # scroll to date, in case of a long comment
-        tmp_date = comment_elem.find_element_by_tag_name("i")
-        self.driver.execute_script("arguments[0].scrollIntoView();", tmp_date)
-        res.date = tmp_date.text
+        res.date = self.driver.execute_script('return arguments[0].getElementsByTagName("i")[0].innerText;', comment_elem)
+        # tmp_date = comment_elem.find_element_by_tag_name("i")
+        # self.driver.execute_script("arguments[0].scrollIntoView();", tmp_date)
+        # res.date = tmp_date.text
         return res
 
     def play(self):
         self.login()
 
-        ####################
-        ### Ab hier kann man was ausprobieren
-        # ohne commentar
-        # http://peekaboomoments.com/daily_detail/537123580?id=561216195715658404
-        # mit kommentar
-        # http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147
-        # self.get_files_in_album("http://peekaboomoments.com/album_detail/537123580?id=561212659812528779")
+        #########################################
+        ### Ab hier kann man was ausprobieren ###
+        #########################################
 
-
-        self.scrap_album_sources(20)
-
+        db = DBManager()
+        album_link = db.get_album_src("30.07.2016")
+        self.get_files_in_album(album_link)
 
 
 if __name__ == "__main__":
+    bla = ScrapPeekaboo()
+    bla.play()
 
-
-    # bla = ScrapPeekaboo()
-    # bla.play()
-    
-    list1 = ["1", "3", "5"]
-    list2 = ["1", "2", "3", "4", "5"]
-    print(list(set(list2) - set(list1)))
