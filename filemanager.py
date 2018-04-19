@@ -42,7 +42,7 @@ class FileManager:
             
         self.make_dir(path)
         return path
-        
+
 
 if __name__ == "__main__":
     fm = FileManager()
@@ -51,5 +51,3 @@ if __name__ == "__main__":
 #     test.type = FileType.video
 #     print(fm.get_target_path(test))
 
-    import urllib.request
-    urllib.request.urlretrieve("http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg", 'C:/Users/michaelk/dev/python/scrapPeekaboo/bla.jpg')

@@ -17,8 +17,10 @@ from albumclass import AlbumClass
 
 import utils
 import time
+import urllib.request
 
 from selenium.webdriver.common.action_chains import ActionChains
+from filemanager import FileManager
 
 
 class ScrapPeekaboo:
@@ -36,12 +38,12 @@ class ScrapPeekaboo:
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
         # connection
         self.driver = webdriver.Firefox(firefox_profile=profile)
-        self.driver.get("http://peekaboomoments.com/en/home/537123580")
 
         ### Datenbank
         self.db = ""
 
     def login(self):
+        self.driver.get("http://peekaboomoments.com/en/home/537123580")
         elem = self.driver.find_element_by_name("user[login]")
         elem.clear()
         elem.send_keys("michael.kamfor@tu-dortmund.de")
@@ -340,35 +342,40 @@ class ScrapPeekaboo:
     def get_class_text(self, dom_element, class_name):
         tmp_text = self.driver.execute_script('return arguments[0].getElementsByClassName("{0}")[0].innerHTML;'.format(class_name), dom_element)
         return tmp_text
-    
+        
     def download_file(self, db, fs, file):
         
         # check if already downloaded
         if db.file_is_downloaded(file.src):
             return
         # name
-        
-        # get it
-        # save metadata
+        path = fs.get_target_path(file) + file.src.split('/')[-1]
 
+        # get it
+        urllib.request.urlretrieve(file.src, path)
+
+        # save metadata
+        
     def play(self):
-        self.login()
+#         self.login()
 
         #########################################
         ### Ab hier kann man was ausprobieren ###
         #########################################
 
-#         db = DBManager()
-#         album_link = db.get_album_src("30.07.2016")
-        album_link = "http://peekaboomoments.com/daily_detail/537123580?id=322571879926985358"
-        print(album_link)
-        self.get_files_in_album(album_link)
-
+        db = DBManager()
+        fs = FileManager()
+        file = FileClass()
+        file.src ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
+        file.type = FileType.foto
+        file.date = "32.12.2008"
+        
+        self.download_file(db, fs, file)
+        self.driver.close()
 
 if __name__ == "__main__":
     bla = ScrapPeekaboo()
-#     bla.play()
-    bla.driver.get("http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg")
+    bla.play()
 
 
 

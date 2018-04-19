@@ -59,9 +59,16 @@ def html_to_user_comment(str_arg):
     comment = str_arg[start_com:].replace("\n", " ").strip()
     return (user, comment)
     
+    
+# def get_name_from_src(arg):    
+#     return arg.split('/')[-1]
+      
 if __name__ == "__main__":
     print(format_date_album("(Apr.1, 2018)"))
     print(format_date_file("2Y-10M-12Ds old (Apr.11, 2018)"))
     (date, acc) = format_date_access("(July.30, 2015) ·Family Members and Fans")
     print(date)
     print(acc)
+    
+#     test ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
+#     print(get_name_from_src(test))

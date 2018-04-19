@@ -163,7 +163,7 @@ class DBManager:
         c = self.db.cursor()
         t = (src,)
         c.execute('SELECT SrcLocal FROM File WHERE SrcOnline=?', t)
-        return len(c.fetchone()[0]) > 0
+        return c.fetchone() is not None
 
     def get_album_links(self):
         self.db.row_factory = lambda cursor, row: row[0]
@@ -193,8 +193,16 @@ class DBManager:
         self.create_table_album()
         self.create_table_file()
         self.create_table_comment()
-
+        
 
 if __name__ == "__main__":
+    
+    from fileclass import FileClass, FileType
+    
     man = DBManager("peekaboo.db")
-    man.sel("SELECT * FROM Album where Date = '30.05.2016'")
+    file = FileClass()
+    file.src ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
+    file.type = FileType.foto
+    file.date = "32.12.2008"
+    man.persist_file(file, '99999', commit=False)
+    man.sel("SELECT * FROM File ")
