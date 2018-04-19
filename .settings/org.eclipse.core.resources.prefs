@@ -1,3 +1,5 @@
 eclipse.preferences.version=1
-encoding/dbManage.py=utf-8
+encoding/dbmanager.py=utf-8
+encoding/filemanager.py=utf-8
 encoding/main.py=utf-8
+encoding/scrappeekaboo.py=utf-8

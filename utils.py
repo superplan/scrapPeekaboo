@@ -49,7 +49,16 @@ def format_date_access(arg):
 
     return format_date(tmp_list, 2), " ".join(tmp_list[4:])
 
-
+    
+def html_to_user_comment(str_arg):
+    (tag1, tag2) = ("<mark>", "</mark>")
+    start_usr = str_arg.index(tag1) + len(tag1)
+    end_usr = str_arg.index(":")
+    start_com = str_arg.index(tag2) + len(tag2)
+    user = str_arg[start_usr:end_usr].replace("\n", " ").strip()
+    comment = str_arg[start_com:].replace("\n", " ").strip()
+    return (user, comment)
+    
 if __name__ == "__main__":
     print(format_date_album("(Apr.1, 2018)"))
     print(format_date_file("2Y-10M-12Ds old (Apr.11, 2018)"))

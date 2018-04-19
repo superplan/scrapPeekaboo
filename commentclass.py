@@ -12,7 +12,7 @@ class CommentClass:
             out += " like"
         else:
             out += self.text
-        return out + "\n"
+        return out #+ "\n"
 
     @staticmethod
     def example_data():

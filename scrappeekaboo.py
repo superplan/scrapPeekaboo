@@ -28,7 +28,14 @@ class ScrapPeekaboo:
     def __init__(self):
 
         ### Selenium Konfig
-        self.driver = webdriver.Firefox()
+        # To prevent download dialog
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('browser.download.folderList', 2) # custom location
+        profile.set_preference('browser.download.manager.showWhenStarting', False)
+        profile.set_preference('browser.download.dir', 'C:/Users/michaelk/dev/python/pkb_files')
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
+        # connection
+        self.driver = webdriver.Firefox(firefox_profile=profile)
         self.driver.get("http://peekaboomoments.com/en/home/537123580")
 
         ### Datenbank
@@ -72,78 +79,6 @@ class ScrapPeekaboo:
             if new_height <= last_height:
                 break
             last_height = new_height
-
-    def scrap(self, days_max):
-        album_liste = self.driver.find_elements_by_class_name("main-list-item")
-
-        loop_nr = 0
-        for albumListeElement in album_liste:
-
-            if loop_nr >= days_max:
-                break
-
-            loop_nr += 1
-
-            album = AlbumClass()
-
-            # Source
-            album_link = albumListeElement.find_element_by_class_name("swiper-detail-enter")
-            album.src = album_link.get_attribute("href")
-            # window_before = self.driver.window_handles[0]
-            # album_link.click()
-            #
-            # ### Warte bis Album geladen hat
-            # WebDriverWait(self.driver, self.TIME_OUT).until(EC.new_window_is_opened(self.driver.window_handles))
-            #
-            # window_after = self.driver.window_handles[1]
-            # self.driver.switch_to_window(window_after)
-            #
-            # WebDriverWait(self.driver, self.TIME_OUT).until(EC.element_to_be_clickable((By.CLASS_NAME, "pic")))
-            # bildListe = self.driver.find_elements_by_class_name("pic")
-            #
-            #
-            # print(str(loop_nr) + " von " + str(len(album_liste)))
-            #
-            # album = AlbumClass()
-            #
-            # tmp_date = self.driver.find_element_by_class_name("detail-date").text
-            # album.date = utils.format_date_file(tmp_date)
-            #
-            # tmp_caption = self.driver.find_element_by_class_name("describe-content").text
-            # if tmp_caption != "Write down the story of this day...":
-            #     album.caption = tmp_caption
-            #
-            # for bild in bildListe:
-            #
-            #     file = FileClass()
-            #     bild.click()
-            #
-            #     ### warten und jetzt endlich die daten holen
-            #     WebDriverWait(self.driver, self.TIME_OUT).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='comments-info-content' or @class='comments-null']")))
-            #
-            #     link = self.driver.find_element_by_xpath("//*[@class='view-wrap-pic' or @class='view-wrap-video']")
-            #     file.src = link.get_attribute("src")
-            #     file.date = album.date
-            #
-            #     comments = self.driver.find_elements_by_class_name("comments-info-content")
-            #     for com in comments:
-            #         tmpCom = CommentClass()
-            #         tmpCom.text = com.find_element_by_tag_name("mark").text
-            #         tmpCom.date = com.find_element_by_tag_name("i").text
-            #         tmpCom.who = com.find_element_by_tag_name("span").text
-            #         tmpCom.is_like = (tmpCom.text == "Liked this photo")
-            #         file.add_comment([tmpCom])
-            #
-            #     album.add_image([file])
-            #     self.driver.execute_script('{$(".view").hide(), $(".view-wrap-describe").empty(), $(".view-wrap-box").remove(), $(".view-wrap-loading").show(), $(".view-wrap-load").hide();var e = $(".view-content").find("video");0 != e.length && e.each(function() {$(this).get(0).pause()}), T = 0, w = {}}')
-            #
-            #
-            # # back to man window
-            # self.driver.switch_to_window(window_before)
-            #
-            # album.show_all()
-
-    #             break;
 
     def scrap_album_sources(self, days_max):
         global meta_info
@@ -214,17 +149,17 @@ class ScrapPeekaboo:
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
 
-        try:
+        if "daily_detail" in link:
             text_entry = self.driver.find_element_by_class_name("daily-text")
-            afile = self.scrap_text_file(text_entry, link)
+            afile = self.scrap_text_file(text_entry)
+            afile.src = link
 
             if type(self.db) is DBManager:
                 self.db.persist_file(afile, self.db.gen_id(link), True)
             else:
                 print(afile)
 
-        except NoSuchElementException:
-
+        else:
             # Foto oder Video
             file_list = self.driver.find_elements_by_class_name("main-list-item")
 
@@ -308,6 +243,7 @@ class ScrapPeekaboo:
     def scrap_file(self, file_elem):
 
         res = FileClass()
+        self.driver.execute_script("arguments[0].scrollIntoView();", file_elem)
 
         # type
         try:
@@ -349,6 +285,7 @@ class ScrapPeekaboo:
         edit_menu = file_elem.find_element_by_class_name("operate-more")
         actions.click(edit_menu).perform()
         file_elem.find_element_by_class_name("more-edit").click()
+#         self.driver.execute_script('return arguments[0].getElementsByClassName("more-edit")[0].click();', file_elem)
         ## access
         access_prop = self.driver.find_element_by_class_name("edit-operate-power")
         res.access = Access.set(access_prop.find_element_by_tag_name("mark").text)
@@ -364,7 +301,6 @@ class ScrapPeekaboo:
         self.driver.execute_script("document.getElementsByClassName('operate-comment')[0].style.display='block';")
         file_elem.find_element_by_class_name("operate-comment").click()
         # hier ist entweder comment-null oder comment-popup
-        # time.sleep(2)
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".comment-popup, .comment-null")))
         comments_list = file_elem.find_elements_by_class_name("comment-content-item")
@@ -384,25 +320,36 @@ class ScrapPeekaboo:
         res = CommentClass()
 
         if not text_file:
-            # tmp_text = comment_elem.find_element_by_tag_name("span").text.split(' : ')
-            tmp_text = self.driver.execute_script('return arguments[0].getElementsByTagName("span")[0].innerText;', comment_elem).split(' : ')
+            tmp_text = self.get_tag_text(comment_elem, "span")
         else:
-            tmp_text = comment_elem.find_element_by_class_name("comments-list-content").text.split(' : ')
+#             tmp_text = comment_elem.find_element_by_class_name("comments-list-content").text.split(' : ')
+            tmp_text = self.get_class_text(comment_elem, "comments-list-content")
 
-        if len(tmp_text) != 2:
-            print(tmp_text)
-            time.sleep(100)
-        else:
-            res.who = tmp_text[0]
-            res.text = tmp_text[1]
-            res.is_like = (res.text == "Liked this photo")
+
+        (res.who, res.text) = utils.html_to_user_comment(tmp_text)
+        res.is_like = (res.text == "Liked this photo")
 
         # scroll to date, in case of a long comment
-        res.date = self.driver.execute_script('return arguments[0].getElementsByTagName("i")[0].innerText;', comment_elem)
-        # tmp_date = comment_elem.find_element_by_tag_name("i")
-        # self.driver.execute_script("arguments[0].scrollIntoView();", tmp_date)
-        # res.date = tmp_date.text
+        res.date = self.get_tag_text(comment_elem, "i")
         return res
+    
+    def get_tag_text(self, dom_element, tag_name):
+        tmp_text = self.driver.execute_script('return arguments[0].getElementsByTagName("{0}")[0].innerHTML;'.format(tag_name), dom_element)
+        return tmp_text
+
+    def get_class_text(self, dom_element, class_name):
+        tmp_text = self.driver.execute_script('return arguments[0].getElementsByClassName("{0}")[0].innerHTML;'.format(class_name), dom_element)
+        return tmp_text
+    
+    def download_file(self, db, fs, file):
+        
+        # check if already downloaded
+        if db.file_is_downloaded(file.src):
+            return
+        # name
+        
+        # get it
+        # save metadata
 
     def play(self):
         self.login()
@@ -411,12 +358,17 @@ class ScrapPeekaboo:
         ### Ab hier kann man was ausprobieren ###
         #########################################
 
-        db = DBManager()
-        album_link = db.get_album_src("30.07.2016")
+#         db = DBManager()
+#         album_link = db.get_album_src("30.07.2016")
+        album_link = "http://peekaboomoments.com/daily_detail/537123580?id=322571879926985358"
+        print(album_link)
         self.get_files_in_album(album_link)
 
 
 if __name__ == "__main__":
     bla = ScrapPeekaboo()
-    bla.play()
+#     bla.play()
+    bla.driver.get("http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg")
+
+
 

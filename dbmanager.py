@@ -158,6 +158,12 @@ class DBManager:
         t = (date,)
         c.execute('SELECT src FROM Album WHERE Date=? ORDER BY AlbumId', t)
         return c.fetchone()[0]
+    
+    def file_is_downloaded(self, src = ""):
+        c = self.db.cursor()
+        t = (src,)
+        c.execute('SELECT SrcLocal FROM File WHERE SrcOnline=?', t)
+        return len(c.fetchone()[0]) > 0
 
     def get_album_links(self):
         self.db.row_factory = lambda cursor, row: row[0]
@@ -191,4 +197,4 @@ class DBManager:
 
 if __name__ == "__main__":
     man = DBManager("peekaboo.db")
-    man.sel("SELECT * FROM Album where Date = '31.07.2015'")
+    man.sel("SELECT * FROM Album where Date = '30.05.2016'")
