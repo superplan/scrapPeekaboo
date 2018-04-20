@@ -34,9 +34,9 @@ def get_album_content():
 # view database
 def view():
     db = DBManager()
-    db.select()
+    db.sel("SELECT * FROM File ")
+    db.sel("SELECT * FROM Comment ")
 
 
-# setup()
-get_album_links()
 # view()
+get_album_content()

@@ -142,12 +142,13 @@ class ScrapPeekaboo:
         for link in links:
             self.get_files_in_album(link)
 
-        ### beende selenium        
+        # beende selenium
         self.driver.close()
 
     def get_files_in_album(self, link):
 
         self.driver.get(link)
+        time.sleep(2)
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
 
@@ -165,8 +166,14 @@ class ScrapPeekaboo:
             # Foto oder Video
             file_list = self.driver.find_elements_by_class_name("main-list-item")
 
+            if self.db.scraped_files_in_album(link) == len(file_list):
+                return
+
             for file_elem in file_list:
                 afile = self.scrap_file(file_elem)
+
+                if afile == None:
+                    continue
 
                 if type(self.db) is DBManager:
                     self.db.persist_file(afile, self.db.gen_id(link), True)
@@ -191,6 +198,9 @@ class ScrapPeekaboo:
         (tmp_date, tmp_access) = utils.format_date_access(tmp_date_and_access)
         res.date = tmp_date
         res.access = Access.set(tmp_access)
+
+        #who
+        # TODO put it into caption!
 
         # comments
         comments_list = self.driver.find_elements_by_class_name("comments-list-item")
@@ -276,6 +286,9 @@ class ScrapPeekaboo:
             self.driver.execute_script(
                 '{$(".view").hide(), $(".view-wrap-describe").empty(), $(".view-wrap-box").remove(), $(".view-wrap-loading").show(), $(".view-wrap-load").hide();var e = $(".view-content").find("video");0 != e.length && e.each(function() {$(this).get(0).pause()}), T = 0, w = {}}')
 
+        if self.db.file_is_scraped(res.src):
+            return None
+
         # date
         res.date = utils.format_date_file(self.driver.find_element_by_class_name("detail-date").text)
 
@@ -348,6 +361,7 @@ class ScrapPeekaboo:
         # check if already downloaded
         if db.file_is_downloaded(file.src):
             return
+
         # name
         path = fs.get_target_path(file) + file.src.split('/')[-1]
 
@@ -364,14 +378,16 @@ class ScrapPeekaboo:
         #########################################
 
         db = DBManager()
-        fs = FileManager()
-        file = FileClass()
-        file.src ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
-        file.type = FileType.foto
-        file.date = "32.12.2008"
-        
-        self.download_file(db, fs, file)
-        self.driver.close()
+        # fs = FileManager()
+        # album_link = db.get_album_src("11.04.2018")
+        # file = FileClass()
+        # file.src =
+        # print(file.src)
+        # file.type = FileType.foto
+        # file.date = "32.12.2008"
+        #
+        # self.download_file(db, fs, file)
+        # self.driver.close()
 
 if __name__ == "__main__":
     bla = ScrapPeekaboo()

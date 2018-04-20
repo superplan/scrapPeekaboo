@@ -165,6 +165,17 @@ class DBManager:
         c.execute('SELECT SrcLocal FROM File WHERE SrcOnline=?', t)
         return c.fetchone() is not None
 
+    def scraped_files_in_album(self, album_src):
+        c = self.db.cursor()
+        id = (self.gen_id(album_src),)
+        c.execute('SELECT Count(FileId) FROM File WHERE AlbumId=?', id)
+        return c.fetchone()
+
+    def file_is_scraped(self, file_src):
+        c = self.db.cursor()
+        c.execute('SELECT Count(FileId) FROM File WHERE SrcOnline=?', [file_src])
+        return c.fetchone() > 0
+
     def get_album_links(self):
         self.db.row_factory = lambda cursor, row: row[0]
         cursor = self.db.cursor()
@@ -198,11 +209,10 @@ class DBManager:
 if __name__ == "__main__":
     
     from fileclass import FileClass, FileType
-    
-    man = DBManager("peekaboo.db")
-    file = FileClass()
-    file.src ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
-    file.type = FileType.foto
-    file.date = "32.12.2008"
-    man.persist_file(file, '99999', commit=False)
-    man.sel("SELECT * FROM File ")
+
+    man = DBManager()
+    album_link = "http://peekaboomoments.com/album_detail/537123580?id=167345424990729199"
+    file_link = "http://alihk.peekaboocdn.com/jp/pictures/201504/537296689/d0c178361127433f9ebea9af268e5184.jpg"
+    id = man.gen_id(album_link)
+    print(man.file_is_scraped(file_link+"ee"))
+
