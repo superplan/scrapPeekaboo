@@ -28,7 +28,7 @@ def get_album_content():
     scrap = ScrapPeekaboo()
     scrap.db = db
     scrap.get_album_content(db.get_album_links())
-    db.select()
+    # db.select()
 
 
 # view database

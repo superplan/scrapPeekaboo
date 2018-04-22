@@ -60,8 +60,8 @@ def html_to_user_comment(str_arg):
     return (user, comment)
     
     
-# def get_name_from_src(arg):    
-#     return arg.split('/')[-1]
+# parent:'1M old (June.30, 2015) · Family Members and Fans'
+#  child:'1M old'
       
 if __name__ == "__main__":
     print(format_date_album("(Apr.1, 2018)"))
@@ -70,5 +70,9 @@ if __name__ == "__main__":
     print(date)
     print(acc)
     
-#     test ="http://alihk.peekaboocdn.com/jp/pictures/original/201612/537296975/9f609a0c176a40abb8100d85fa86e9c8.jpg"
-#     print(get_name_from_src(test))
+    test ="""
+                <mark>Me :</mark>
+                
+                Liked this photo
+                
+              """

@@ -179,7 +179,14 @@ class DBManager:
     def get_album_links(self):
         self.db.row_factory = lambda cursor, row: row[0]
         cursor = self.db.cursor()
-        return cursor.execute('SELECT Src FROM Album').fetchall()
+        # bekannte Alben
+        all_links = cursor.execute('SELECT Src FROM Album').fetchall()
+        # nocht nicht verarbeitete Alben
+        not_progressed = cursor.execute('select Src from Album where AlbumID not in (Select Distinct AlbumId from File)').fetchall()
+        # return list(set(all_links) - set(list_1))
+        return all_links
+
+
 
     def delete(self):
         cursor = self.db.cursor()
@@ -204,7 +211,18 @@ class DBManager:
         self.create_table_album()
         self.create_table_file()
         self.create_table_comment()
-        
+
+    def stats(self):
+        c = self.db.cursor()
+        c.execute('SELECT Count(FileId) FROM File WHERE Type=?', [FileType.foto._value_])
+        tmp = c.fetchone()
+        print(" Fotos: " + str(tmp[0]))
+        c.execute('SELECT Count(FileId) FROM File WHERE Type=?', [FileType.video._value_])
+        tmp = c.fetchone()
+        print("Videos: " + str(tmp[0]))
+        c.execute('SELECT Count(FileId) FROM File WHERE Type=?', [FileType.text._value_])
+        tmp = c.fetchone()
+        print(" Texte: " + str(tmp[0]))
 
 if __name__ == "__main__":
     
@@ -214,5 +232,4 @@ if __name__ == "__main__":
     album_link = "http://peekaboomoments.com/album_detail/537123580?id=167345424990729199"
     file_link = "http://alihk.peekaboocdn.com/jp/pictures/201504/537296689/d0c178361127433f9ebea9af268e5184.jpg"
     id = man.gen_id(album_link)
-    print(man.file_is_scraped(file_link+"ee"))
-
+    man.stats()

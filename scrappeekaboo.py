@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 
 from fileclass import FileClass, FileType, Access
 from dbmanager import DBManager
@@ -149,8 +149,14 @@ class ScrapPeekaboo:
 
         self.driver.get(link)
         time.sleep(2)
-        WebDriverWait(self.driver, self.TIME_OUT).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
+        try:
+            WebDriverWait(self.driver, self.TIME_OUT).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, ".main-list-item, .daily-text")))
+
+        except UnexpectedAlertPresentException:
+            print("Fehlerfenster ist aufgetaucht")
+            print(link)
+            return
 
         if "daily_detail" in link:
             text_entry = self.driver.find_element_by_class_name("daily-text")
@@ -316,6 +322,7 @@ class ScrapPeekaboo:
         self.driver.execute_script("document.getElementsByClassName('operate-comment')[0].style.display='block';")
         file_elem.find_element_by_class_name("operate-comment").click()
         # hier ist entweder comment-null oder comment-popup
+        time.sleep(2)
         WebDriverWait(self.driver, self.TIME_OUT).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".comment-popup, .comment-null")))
         comments_list = file_elem.find_elements_by_class_name("comment-content-item")
@@ -371,23 +378,9 @@ class ScrapPeekaboo:
         # save metadata
         
     def play(self):
-#         self.login()
-
-        #########################################
-        ### Ab hier kann man was ausprobieren ###
-        #########################################
-
-        db = DBManager()
-        # fs = FileManager()
-        # album_link = db.get_album_src("11.04.2018")
-        # file = FileClass()
-        # file.src =
-        # print(file.src)
-        # file.type = FileType.foto
-        # file.date = "32.12.2008"
-        #
-        # self.download_file(db, fs, file)
-        # self.driver.close()
+        # db = DBManager()
+        self.login()
+        self.get_files_in_album("http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147")
 
 if __name__ == "__main__":
     bla = ScrapPeekaboo()
