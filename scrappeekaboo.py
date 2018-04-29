@@ -122,7 +122,7 @@ class ScrapPeekaboo:
 
         ### herunterscrollen(wartezeit zwischen scrolls)
         # self.click_through_time(5)
-        self.scroll_down(5)
+        # self.scroll_down(5)
         # self.scroll_down_inf(0.1)
 
         ### hole Daten
@@ -174,6 +174,8 @@ class ScrapPeekaboo:
 
             if self.db.scraped_files_in_album(link) == len(file_list):
                 return
+            else:
+                print(link)
 
             for file_elem in file_list:
                 afile = self.scrap_file(file_elem)
@@ -206,7 +208,7 @@ class ScrapPeekaboo:
         res.access = Access.set(tmp_access)
 
         #who
-        # TODO put it into caption!
+        # TODO put it into caption! Only possible when album scrapping
 
         # comments
         comments_list = self.driver.find_elements_by_class_name("comments-list-item")

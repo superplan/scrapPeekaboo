@@ -184,7 +184,7 @@ class DBManager:
         # nocht nicht verarbeitete Alben
         not_progressed = cursor.execute('select Src from Album where AlbumID not in (Select Distinct AlbumId from File)').fetchall()
         # return list(set(all_links) - set(list_1))
-        return all_links
+        return all_links[-200:]
 
 
 
@@ -233,3 +233,9 @@ if __name__ == "__main__":
     file_link = "http://alihk.peekaboocdn.com/jp/pictures/201504/537296689/d0c178361127433f9ebea9af268e5184.jpg"
     id = man.gen_id(album_link)
     man.stats()
+    # print(man.get_album_links())
+    id1 = '860343604286'
+    id2 ='135059307223'
+
+    man.sel("select * from File where AlbumId = 860343604286")
+    man.sel("select * from File where AlbumId = 135059307223")

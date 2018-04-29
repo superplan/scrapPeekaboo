@@ -19,7 +19,7 @@ def get_album_links():
     scrap = ScrapPeekaboo()
     scrap.db = db
     scrap.get_album_links()
-    db.select()
+    # db.select()
 
 
 # get sources for files, comments ect
@@ -39,4 +39,5 @@ def view():
 
 
 # view()
+# get_album_links()
 get_album_content()
