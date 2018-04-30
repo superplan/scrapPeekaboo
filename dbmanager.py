@@ -20,7 +20,7 @@ class DBManager:
         if home == r'C:\Users\michaelk':
             self.db = sqlite3.connect('C:/Users/michaelk/dev/python/scrapPeekaboo/' + self.database_name)
         else:
-            self.db = sqlite3.connect('/home/michael/dev/python/scrapPeekaboo/' + self.database_name)
+            self.db = sqlite3.connect('/home/michael/PycharmProjects/scrapPeekaboo/' + self.database_name)
 
         self.db.execute("PRAGMA foreign_keys = ON")
         ### Helfer
