@@ -163,7 +163,8 @@ class DBManager:
         c = self.db.cursor()
         t = (src,)
         c.execute('SELECT SrcLocal FROM File WHERE SrcOnline=?', t)
-        return c.fetchone() is not None
+        (tmp,) = c.fetchone()
+        return tmp is not None
 
     def scraped_files_in_album(self, album_src):
         c = self.db.cursor()
@@ -186,6 +187,24 @@ class DBManager:
         # return list(set(all_links) - set(list_1))
         return all_links[-200:]
 
+    def set_local_path_for_file(self, file_info):
+
+        sql = ''' UPDATE File
+                  SET SrcLocal = ?
+                  WHERE SrcOnline = ?'''
+        cur = self.db.cursor()
+        cur.execute(sql, file_info)
+        self.db.commit()
+
+    def get_file_data(self):
+        # self.db.row_factory = lambda cursor, row: row[0]
+        cursor = self.db.cursor()
+        # alle bekannten Links
+        # all_links = cursor.execute('SELECT SrcOnline FROM File').fetchall()
+        # nocht nicht heruntergeladene Links
+        not_progressed = cursor.execute('select SrcOnline, Date, Type from File where SrcLocal is null').fetchall()
+        # return list(set(all_links) - set(list_1))
+        return not_progressed
 
 
     def delete(self):
@@ -223,6 +242,18 @@ class DBManager:
         c.execute('SELECT Count(FileId) FROM File WHERE Type=?', [FileType.text._value_])
         tmp = c.fetchone()
         print(" Texte: " + str(tmp[0]))
+        c.execute('SELECT Count(FileId) FROM File')
+        tmp = c.fetchone()
+        total = str(tmp[0])
+        c.execute('SELECT Count(FileId) FROM File WHERE SrcLocal IS NOT NULL')
+        tmp = c.fetchone()
+        downloaded = str(tmp[0])
+        print("----->  " + downloaded + " von " + total + " heruntergeladen")
+
+    def reset_downloaded(self):
+        cur = self.db.cursor()
+        cur.execute("UPDATE File SET SrcLocal = Null WHERE Type = 3")
+        self.db.commit()
 
 if __name__ == "__main__":
     
@@ -230,12 +261,11 @@ if __name__ == "__main__":
 
     man = DBManager()
     album_link = "http://peekaboomoments.com/album_detail/537123580?id=167345424990729199"
-    file_link = "http://alihk.peekaboocdn.com/jp/pictures/201504/537296689/d0c178361127433f9ebea9af268e5184.jpg"
     id = man.gen_id(album_link)
     man.stats()
-    # print(man.get_album_links())
-    id1 = '860343604286'
-    id2 ='135059307223'
 
-    man.sel("select * from File where AlbumId = 860343604286")
-    man.sel("select * from File where AlbumId = 135059307223")
+    # man.sel("select * from File where Type = 3")
+
+    # text
+    # http://peekaboomoments.com/daily_detail/537123580?id=199158998155129590
+

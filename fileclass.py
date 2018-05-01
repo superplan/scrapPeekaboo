@@ -27,13 +27,18 @@ class FileType(Enum):
 
 class FileClass:
 
-    def __init__(self):
+    def __init__(self, data = None):
         self.src = None
         self.access = Access.all
         self.type = FileType.foto
         self.date = None
         self.comment_list = []
         self.caption = ""
+
+        if data != None:
+            (self.src, self.date, self.type) = data
+            # convert FileType to Enum
+            self.type = FileType(self.type)
 
     def __str__(self):
         out = "------- File ------- \n"

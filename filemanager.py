@@ -13,7 +13,7 @@ class FileManager:
         if home == r'C:\Users\michaelk':
             self.root_dir = 'C:/Users/michaelk/dev/python/pkb_files/'
         else:
-            self.root_dir = '/home/michael/dev/python/pkb_files??/'
+            self.root_dir = '/run/media/michael/SAMSUNG/pkb_files/'
             
         self.img_dir = self.root_dir + "img/"
         self.vid_dir = self.root_dir + "vid/"

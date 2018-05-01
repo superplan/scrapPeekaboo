@@ -5,6 +5,7 @@ Peekaboo Download
 
 from scrappeekaboo import ScrapPeekaboo
 from dbmanager import DBManager
+from filemanager import FileManager
 
 
 # first run
@@ -19,7 +20,6 @@ def get_album_links():
     scrap = ScrapPeekaboo()
     scrap.db = db
     scrap.get_album_links()
-    # db.select()
 
 
 # get sources for files, comments ect
@@ -28,7 +28,19 @@ def get_album_content():
     scrap = ScrapPeekaboo()
     scrap.db = db
     scrap.get_album_content(db.get_album_links())
-    # db.select()
+
+
+# download files
+def download_files():
+    db = DBManager()
+    fm = FileManager()
+    scrap = ScrapPeekaboo(fm)
+    scrap.db = db
+    scrap.download_all_files()
+
+
+
+    scrap.get_album_content(db.get_album_links())
 
 
 # view database
@@ -40,4 +52,5 @@ def view():
 
 # view()
 # get_album_links()
-get_album_content()
+# get_album_content()
+download_files()

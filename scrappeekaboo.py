@@ -12,6 +12,7 @@ from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPr
 
 from fileclass import FileClass, FileType, Access
 from dbmanager import DBManager
+from filemanager import FileManager
 from commentclass import CommentClass
 from albumclass import AlbumClass
 
@@ -20,14 +21,13 @@ import time
 import urllib.request
 
 from selenium.webdriver.common.action_chains import ActionChains
-from filemanager import FileManager
 
 
 class ScrapPeekaboo:
     ### Konstanten
     TIME_OUT = 10
 
-    def __init__(self):
+    def __init__(self, fm = None):
 
         ### Selenium Konfig
         # To prevent download dialog
@@ -39,8 +39,13 @@ class ScrapPeekaboo:
         # connection
         self.driver = webdriver.Firefox(firefox_profile=profile)
 
-        ### Datenbank
+        ### Datenbank und Dateisystem
         self.db = ""
+        self.fm = ""
+
+        if fm != None:
+            self.fm = fm
+            profile.set_preference('browser.download.dir', fm.root_dir)
 
     def login(self):
         self.driver.get("http://peekaboomoments.com/en/home/537123580")
@@ -364,25 +369,58 @@ class ScrapPeekaboo:
     def get_class_text(self, dom_element, class_name):
         tmp_text = self.driver.execute_script('return arguments[0].getElementsByClassName("{0}")[0].innerHTML;'.format(class_name), dom_element)
         return tmp_text
-        
-    def download_file(self, db, fs, file):
+
+    def get_textfile_content(self, text_link):
+        self.driver.get(text_link)
+        time.sleep(2)
+
+        return self.driver.find_element_by_class_name("daily-text").text
+
+    def download_file(self, file):
         
         # check if already downloaded
-        if db.file_is_downloaded(file.src):
+        if self.db.file_is_downloaded(file.src):
             return
 
         # name
-        path = fs.get_target_path(file) + file.src.split('/')[-1]
+        path = self.fm.get_target_path(file) + file.src.split('/')[-1]
 
         # get it
-        urllib.request.urlretrieve(file.src, path)
+        if file.type == FileType.text:
+            text = self.get_textfile_content(file.src)
+            path = path + ".txt"
+            output_file = open(path, "w")
+            output_file.write(text)
+            output_file.close()
+        else:
+            urllib.request.urlretrieve(file.src, path)
 
         # save metadata
+        self.db.set_local_path_for_file((path, file.src))
+
+    def download_all_files(self):
+        self.db = DBManager()
+        self.fm = FileManager()
+        self.login()
+
+        links = self.db.get_file_data()
+
+        for file_link in links:
+            file = FileClass(file_link)
+            print(file)
+            self.download_file(file)
         
     def play(self):
-        # db = DBManager()
+        self.db = DBManager()
+        self.fm = FileManager()
         self.login()
-        self.get_files_in_album("http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147")
+        # self.get_files_in_album("http://peekaboomoments.com/daily_detail/537123580?id=210012179038729147")
+
+        text_link = "http://peekaboomoments.com/daily_detail/537123580?id=296585824933507231"
+        data = (text_link, "20.03.2016", 3)
+        file = FileClass(data)
+        print(file)
+        self.download_file(file)
 
 if __name__ == "__main__":
     bla = ScrapPeekaboo()
